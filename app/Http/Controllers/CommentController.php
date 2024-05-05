@@ -5,15 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Comment;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
+use App\Http\Resources\CommentResource;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class CommentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $pageSize = $request->page_size ?? 10;
+        $comments = Comment::paginate($pageSize);
+        return new CommentResource($comments);
     }
 
     /**
@@ -21,7 +26,12 @@ class CommentController extends Controller
      */
     public function store(StoreCommentRequest $request)
     {
-        //
+        $created = Comment::query()->create([
+            'title' => $request->title,
+            'body' => $request->body
+        ]);
+
+        return new CommentResource($created);
     }
 
     /**
@@ -29,7 +39,7 @@ class CommentController extends Controller
      */
     public function show(Comment $comment)
     {
-        //
+        return new CommentResource($comment);
     }
 
     /**
@@ -37,7 +47,18 @@ class CommentController extends Controller
      */
     public function update(UpdateCommentRequest $request, Comment $comment)
     {
-        //
+        $updated = $comment->update([
+            'title' => $request->title ?? $comment->title,
+            'body' => $request->body ?? $comment->body
+        ]);
+        if(!$updated){
+            return new JsonResponse([
+                'errors' => [
+                    'Failed to updated the model'
+                ]
+            ], 400);
+        }
+        return new CommentResource($updated);
     }
 
     /**
@@ -45,6 +66,18 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment)
     {
-        //
+        $deleted = $comment->forceDelete();
+
+        if(!$deleted){
+            return new JsonResponse([
+                'errors' => [
+                    'Failed to deleted a model'
+                ]
+            ], 400);
+        }
+
+        return new JsonResponse([
+            'data' => 'success'
+        ]);
     }
 }
