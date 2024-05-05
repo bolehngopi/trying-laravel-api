@@ -9,7 +9,7 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
-class PostRepository extends BaseRepository
+class UserRepository extends BaseRepository
 {
     public function create(array $attributes)
     {
